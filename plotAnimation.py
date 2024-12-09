@@ -3,7 +3,7 @@ from matplotlib.animation import FuncAnimation
 
 fig, ax = plt.subplots()
 
-file = open("run1.txt")
+file = open("log.txt")
 
 data = file.readline()
 

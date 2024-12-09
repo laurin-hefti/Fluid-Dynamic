@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <chrono>
 
 #include "utils.cpp"
 #include "grid.cpp"
@@ -12,6 +13,19 @@
 class Analyser {
 public:
     std::vector<std::vector<float>> saveLog;
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+
+    void startTimer(){
+        start = std::chrono::system_clock::now();
+    }
+
+    void endTimer(){
+        end = std::chrono::system_clock::now();
+    }
+
+    double getTime(){
+        return (this->end - this->start).count();
+    }
 
     void save(std::vector<float> data){
         saveLog.push_back(data);
@@ -48,6 +62,8 @@ public:
     std::vector<float> simpleStep(Grid& g, float dt, float fp, float my, int& status){
         //claculate the first velocity
         MatrixSolver solver;
+
+        solver.init();
 
         g.calc1Ddx2V();
         g.calc1Ddxp();
@@ -174,6 +190,8 @@ public:
 };
 
 int main() {
+
+    a.startTimer();
     Grid g;
     g.init1D(100, 1,2);
     
@@ -186,7 +204,10 @@ int main() {
     CFDSolver sys;
     sys.init();
     
-    sys.simplerun(g, 0,20,0.1, 1000, 10e-4);
+    sys.simplerun(g, 0,10,0.1, 1000, 10e-4);
+    a.endTimer();
+
+    std::cout << "time : " << a.getTime();
 
     
     a.saveToFile("log.txt");
