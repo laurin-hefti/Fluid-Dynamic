@@ -24,7 +24,7 @@ float maxError;
         this->maxError = 10e9;
     }
 
-    std::vector<float> Jakobi(std::vector<float>& a, std::vector<float>& b){
+    std::vector<float> Jakobi(const std::vector<float>& a, const std::vector<float>& b){
         int xsize = b.size();
         int ysize = a.size() / xsize;
         
@@ -86,11 +86,11 @@ float maxError;
         #if TEST == true
         std::cout << "jakob iteration : " << it << std::endl;
         #endif
-        
+
         return x;
     }
 
-        std::vector<float> GausSeidel(std::vector<float>& a, std::vector<float>& b){
+    std::vector<float> GausSeidel(std::vector<float>& a, std::vector<float>& b){
         int xsize = b.size();
         int ysize = a.size() / xsize;
         
@@ -158,7 +158,7 @@ float maxError;
         #if TEST == true
         std::cout << "Gaus Seidel iteration : " << it << std::endl;
         #endif
-
+        
         return x;
     }
     
@@ -170,13 +170,13 @@ int main(){
 
     solver.init();
 
-    std::vector<float> a = {4,1,2,1,3,2,1,1,2};
-    std::vector<float> b = {12,13,9};
+    std::vector<float> a = {2,-1,0,-1,2,-1,0,-1,2};
+    std::vector<float> b = {0.1,0.005,0.1};
 
     std::vector<float> x_jakobi = solver.Jakobi(a,b);
 
     std::vector<float> x_gausSeidel = solver.GausSeidel(a,b);
-
+    printMatrix(x_jakobi,3);
     printMatrix(x_gausSeidel,3);
     return 0;
 }

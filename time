@@ -1,1 +1,16 @@
-1.6461e+11
+1.6461e+11 -> 2 min 44.61s
+
+// only with opt main not opt grid
+64314
+
+o2 5953
+
+o3 6912
+
+ofast 6225
+
+o3 march=native mtune=native
+
+// with grid opt
+
+o2 4987

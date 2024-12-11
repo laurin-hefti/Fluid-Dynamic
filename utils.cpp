@@ -4,7 +4,7 @@ void scaleVec(std::vector<float>& v, float s){
     }
 }
 
-void printMatrix(std::vector<float> m, int x){
+void printMatrix(const std::vector<float>& m, int x){
     int len = m.size();
     int y = len/x;
     for (int i = 0; i < y; i++){

@@ -24,7 +24,7 @@ public:
     }
 
     double getTime(){
-        return (this->end - this->start).count();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(this->end - this->start).count();
     }
 
     void save(std::vector<float> data){
@@ -67,10 +67,17 @@ public:
 
         g.calc1Ddx2V();
         g.calc1Ddxp();
-        
+
         std::vector<float> a = g.getMatrixa1D(dt, fp, my);
+        std::vector<float> static_a = g.getStaticMatrixa1D();
         std::vector<float> b = g.getMatrixb1D(dt, fp);
-        
+        std::vector<float> f_temp(g.numofCells, 0);
+        std::vector<float> divergenzV(g.numofCells, 0);
+        std::vector<float> p_corr(g.numofCells, 0);
+        std::vector<float> p_grad(g.numofCells,0);
+        std::vector<float> new_v(g.numofCells, 0);
+        std::vector<float> new_p(g.numofCells, 0);
+
         std::vector<float> old_v(g.numofCells, 0);
         float tolleranz = this->tolleranz;
         float differenz = 1;
@@ -86,7 +93,7 @@ public:
             
             b = g.getMatrixb1D(dt, fp);
 
-            std::vector<float> f_temp = solver.Jakobi(a,b);
+            f_temp = solver.GausSeidel(a,b);
             
             //calculate the preasure correcture
             
@@ -96,11 +103,9 @@ public:
             
             g.calc1DVeldiv();
             
-            std::vector<float> divergenzV = g.getVelDivergenz();
-
-            std::vector<float> static_a = g.getStaticMatrixa1D();
+            divergenzV = g.getVelDivergenz();
             
-            std::vector<float> p_corr = solver.Jakobi(static_a,divergenzV);
+            p_corr = solver.Jakobi(static_a,divergenzV);
             
             //add the preasure corr to the vell
             scaleVec(p_corr, 0.6);
@@ -110,7 +115,7 @@ public:
             //calc the p gradient
             g.calc1Ddxp();
             
-            std::vector<float> p_grad = g.getPresGrad();
+            p_grad = g.getPresGrad();
             
             scaleVec(p_grad, dt/fp);
             
@@ -123,8 +128,8 @@ public:
             
             //calc div
             
-            std::vector<float> new_v = g.getVel();
-            std::vector<float> new_p = g.getPres();
+            new_v = g.getVel();
+            new_p = g.getPres();
             
             differenz = 0;
             
@@ -152,11 +157,15 @@ public:
     void simplerun(Grid& g, float startT, float endT, float dt, float fp, float my){
         
         int status = true;
+
+        std::vector<float> adv_pres(g.numofCells, 0);
+        std::vector<float> adv_vel(g.numofCells, 0);
+        std::vector<float> new_v(g.numofCells, 0);
         
         while (status && startT < endT){
             
-            std::vector<float> new_v = this->simpleStep(g, dt, fp, my, status);
-            
+            new_v = this->simpleStep(g, dt, fp, my, status);
+
             g.set1Dvel(new_v); // should be deminsionsles
             
             //std::vector<float> new_p = g.getPres();
@@ -164,8 +173,8 @@ public:
             g.calc1Ddxp();
             g.calc1Ddxv();
 
-            std::vector<float> adv_pres = g.calc1DpresAdv(dt);
-            std::vector<float> adv_vel = g.calc1DvelAdv(dt);
+            adv_pres = g.calc1DpresAdv(dt);
+            adv_vel = g.calc1DvelAdv(dt);
 
             g.set1Dpres(adv_pres);
             g.set1Dvel(adv_vel);
@@ -193,9 +202,10 @@ int main() {
 
     a.startTimer();
     Grid g;
-    g.init1D(100, 1,2);
-    
-    std::vector<float> initPfield = {1,1,1,0.75,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    g.init1D(100, 1,1);
+
+    //std::vector<float> initPfield = {1,1,1,0.75,0.5,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    std::vector<float> initPfield = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0.3,0.5,0.8,1,0.8,0.5,0.3,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     std::vector<float> initFfield = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     
     g.set1Dpres(initPfield);
@@ -203,12 +213,12 @@ int main() {
     
     CFDSolver sys;
     sys.init();
-    
-    sys.simplerun(g, 0,10,0.1, 1000, 10e-4);
+
+    sys.simplerun(g, 0,4,0.01, 1000, 10e-4);
+
     a.endTimer();
 
     std::cout << "time : " << a.getTime();
-
     
     a.saveToFile("log.txt");
     return 0;
