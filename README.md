@@ -1,0 +1,1 @@
+Attempt to create a fluid dynamic simulation program, using the simple mehtod. Since a nice looking wave was created and I realised that half of the code is not worknig, I stopt continue this little proejct.
